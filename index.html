@@ -8,156 +8,281 @@
     <link href="https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* تم الحفاظ على كافة التنسيقات الأصلية لضمان عدم تغيير شكل الموقع */
+        /* ===== THEME VARIABLES ===== */
         :root {
-            --bg-primary: #050508; --bg-secondary: #0c0c12; --bg-card: #12121a;
-            --bg-card-hover: #1a1a25; --bg-modal: #0a0a10; --accent: #e63946;
-            --accent-glow: #ff1a2e; --accent-dark: #b91c28; --gold: #ffd700;
-            --gold-dim: #c4a000; --text-primary: #f0f0f5; --text-secondary: #8888a0;
-            --text-muted: #55556a; --border: #1e1e2e; --border-accent: #2a2a3e;
+            --bg-primary: #050508;
+            --bg-secondary: #0c0c12;
+            --bg-card: #12121a;
+            --bg-card-hover: #1a1a25;
+            --bg-modal: #0a0a10;
+            --accent: #e63946;
+            --accent-glow: #ff1a2e;
+            --accent-dark: #b91c28;
+            --gold: #ffd700;
+            --gold-dim: #c4a000;
+            --text-primary: #f0f0f5;
+            --text-secondary: #8888a0;
+            --text-muted: #55556a;
+            --border: #1e1e2e;
+            --border-accent: #2a2a3e;
             --telegram: #0088cc;
         }
 
         [data-theme="light"] {
-            --bg-primary: #f5f5f7; --bg-secondary: #ebebef; --bg-card: #ffffff;
-            --bg-card-hover: #f0f0f5; --bg-modal: #ffffff; --text-primary: #111118;
-            --text-secondary: #55556a; --text-muted: #9090a8; --border: #dcdce8;
+            --bg-primary: #f5f5f7;
+            --bg-secondary: #ebebef;
+            --bg-card: #ffffff;
+            --bg-card-hover: #f0f0f5;
+            --bg-modal: #ffffff;
+            --accent: #e63946;
+            --accent-glow: #ff1a2e;
+            --accent-dark: #b91c28;
+            --gold: #c4900a;
+            --gold-dim: #a07000;
+            --text-primary: #111118;
+            --text-secondary: #55556a;
+            --text-muted: #9090a8;
+            --border: #dcdce8;
             --border-accent: #c8c8da;
+            --telegram: #006fa8;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
         body {
-            background-color: var(--bg-primary); color: var(--text-primary);
-            font-family: 'Noto Kufi Arabic', sans-serif; direction: rtl;
-            overflow-x: hidden; transition: background-color 0.3s ease;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: 'Noto Kufi Arabic', sans-serif;
+            direction: rtl;
+            overflow-x: hidden;
+            min-height: 100vh;
+            width: 100%;
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
 
-        /* تنسيقات المشغل والنافذة المنبثقة */
-        #anime-modal {
-            position: fixed; inset: 0; z-index: 200;
-            display: none; align-items: flex-start; justify-content: center;
-            overflow-y: auto; background: rgba(0,0,0,0.95);
-            backdrop-filter: blur(4px); padding: 12px 8px;
-        }
+        /* ===== ANIMATIONS ===== */
+        @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+        @keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-10px); } }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideInRight { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes pulse-glow { 0%, 100% { box-shadow: 0 0 20px rgba(230, 57, 70, 0.1); } 50% { box-shadow: 0 0 40px rgba(230, 57, 70, 0.25); } }
+        @keyframes loadingBar { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
+        @keyframes scaleIn { from { opacity: 0; transform: scale(0.5); } to { opacity: 1; transform: scale(1); } }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes slideDown { from { transform: translateY(-110%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes slideUp { from { transform: translateY(0); opacity: 1; max-height: 200px; } to { transform: translateY(-110%); opacity: 0; max-height: 0; } }
+
+        /* ===== NOTICE BANNER ===== */
+        #apology-notice { position: fixed; top: 0; left: 0; right: 0; z-index: 9998; transform: translateY(-110%); opacity: 0; will-change: transform, opacity; }
+        #apology-notice.slide-in { animation: slideDown 0.65s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+        #apology-notice.slide-out { animation: slideUp 0.4s ease-in forwards; }
+        .notice-inner { background: linear-gradient(135deg, #1a0d0e 0%, #120a0b 50%, #1a0d0e 100%); border-bottom: 1px solid rgba(230, 57, 70, 0.35); padding: 12px 16px; display: flex; align-items: flex-start; gap: 12px; box-shadow: 0 4px 24px rgba(0, 0, 0, 0.6); position: relative; overflow: hidden; }
+        .notice-title { font-size: 13px; font-weight: 800; color: var(--accent); margin-bottom: 4px; }
+        .notice-text { font-size: 12px; color: var(--text-secondary); line-height: 1.75; }
+        .notice-close { flex-shrink: 0; width: 28px; height: 28px; border-radius: 8px; background: rgba(230, 57, 70, 0.1); border: 1px solid rgba(230, 57, 70, 0.2); color: var(--text-muted); cursor: pointer; display: flex; align-items: center; justify-content: center; }
+
+        /* ===== LOADING SCREEN ===== */
+        #loading-screen { position: fixed; inset: 0; z-index: 9999; background: var(--bg-primary); display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.6s ease; }
+        #loading-screen.hidden { opacity: 0; pointer-events: none; }
+        .loading-bar-track { margin-top: 32px; width: 192px; height: 4px; background: var(--bg-card); border-radius: 4px; overflow: hidden; }
+        .loading-bar-fill { height: 100%; width: 50%; background: linear-gradient(90deg, transparent, var(--accent), transparent); animation: loadingBar 1s ease-in-out infinite; }
+
+        /* ===== NAVBAR ===== */
+        #navbar { position: fixed; top: 0; left: 0; right: 0; z-index: 100; transition: all 0.4s ease; background: transparent; }
+        #navbar.scrolled { background: rgba(5,5,8,0.92); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border); }
+        .nav-inner { max-width: 1280px; margin: 0 auto; padding: 0 16px; display: flex; align-items: center; justify-content: space-between; height: 72px; }
+        .nav-logo { display: flex; align-items: center; gap: 12px; cursor: pointer; }
+        .nav-logo-icon { width: 44px; height: 44px; background: var(--accent); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: 900; color: white; }
+        .nav-search { flex: 1; max-width: 420px; margin: 0 16px; position: relative; }
+        .nav-search input { width: 100%; background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; padding: 10px 42px 10px 16px; color: var(--text-primary); outline: none; }
+        .theme-toggle-btn { width: 38px; height: 38px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; cursor: pointer; color: var(--text-secondary); }
+
+        /* ===== HERO ===== */
+        #hero { position: relative; min-height: 80vh; display: flex; align-items: center; padding-top: 80px; }
+        .hero-content { position: relative; z-index: 10; max-width: 1280px; margin: 0 auto; padding: 0 16px; width: 100%; }
+        .hero-title { font-size: clamp(28px, 6vw, 60px); font-weight: 900; margin-bottom: 24px; }
+        .btn-primary { padding: 14px 28px; background: var(--accent); border: none; border-radius: 16px; color: white; font-weight: 700; cursor: pointer; box-shadow: 0 8px 24px rgba(230,57,70,0.25); }
+
+        /* ===== ANIME GRID ===== */
+        #anime-section { padding: 40px 16px 64px; }
+        .anime-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 16px; }
+        .anime-card { cursor: pointer; transition: transform 0.3s ease; }
+        .anime-card:hover { transform: translateY(-6px); }
+        .anime-card-inner { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+        .anime-card-img { position: relative; aspect-ratio: 3/4; }
+        .anime-card-img img { width: 100%; height: 100%; object-fit: cover; }
+        .anime-card-info { padding: 12px; }
+
+        /* ===== MODAL ===== */
+        #anime-modal { position: fixed; inset: 0; z-index: 200; display: none; align-items: flex-start; justify-content: center; overflow-y: auto; background: rgba(0,0,0,0.95); backdrop-filter: blur(4px); padding: 20px 10px; }
         #anime-modal.open { display: flex; }
-
-        .modal-card {
-            position: relative; width: 100%; max-width: 1100px;
-            background: var(--bg-modal); border: 1px solid var(--border);
-            border-radius: 20px; overflow: hidden; animation: fadeInUp 0.4s ease;
-        }
-
+        .modal-card { position: relative; width: 100%; max-width: 1100px; background: var(--bg-modal); border: 1px solid var(--border); border-radius: 24px; overflow: hidden; animation: fadeInUp 0.4s ease; }
+        .modal-close { position: absolute; top: 12px; left: 12px; z-index: 20; width: 36px; height: 36px; background: rgba(18,18,26,0.9); border: 1px solid var(--border); border-radius: 12px; color: white; cursor: pointer; }
         .modal-player { display: none; width: 100%; background: #000; }
         .modal-player.active { display: block; }
-        .modal-player-wrap { position: relative; width: 100%; padding-bottom: 56.25%; }
+        .modal-player-wrap { position: relative; padding-bottom: 56.25%; }
         .modal-player-wrap iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: none; }
+        .modal-body { padding: 24px; }
+        .modal-layout { display: flex; flex-direction: column; gap: 28px; }
+        @media (min-width: 768px) { .modal-layout { flex-direction: row; } }
 
-        .modal-close {
-            position: absolute; top: 12px; left: 12px; z-index: 20;
-            width: 36px; height: 36px; border-radius: 12px;
-            background: rgba(18,18,26,0.9); border: 1px solid var(--border);
-            color: white; cursor: pointer; display: flex; align-items: center; justify-content: center;
-        }
+        /* ===== SEASON & EPISODES ===== */
+        .season-pills { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
+        .season-pill { padding: 8px 16px; border-radius: 50px; background: var(--bg-secondary); border: 1px solid var(--border); color: var(--text-secondary); cursor: pointer; }
+        .season-pill.active { background: var(--accent); color: white; border-color: var(--accent); }
+        .episodes-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); gap: 8px; margin-top: 15px; }
+        .episode-btn { padding: 10px; border-radius: 10px; background: var(--bg-card); border: 1px solid var(--border); color: var(--text-secondary); font-weight: 700; cursor: pointer; transition: all 0.2s; }
+        .episode-btn.active { background: var(--accent); color: white; border-color: var(--accent); transform: scale(1.05); }
 
-        /* تنسيق أزرار الحلقات */
-        .episodes-grid {
-            display: grid; grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
-            gap: 8px; margin-top: 15px;
-        }
-        .episode-btn {
-            padding: 10px; border-radius: 10px; border: 1px solid var(--border);
-            background: var(--bg-card); color: var(--text-secondary);
-            font-weight: 700; cursor: pointer; transition: 0.3s;
-        }
-        .episode-btn:hover { border-color: var(--accent); color: var(--accent); }
-        .episode-btn.active {
-            background: var(--accent); color: white; border-color: var(--accent);
-            box-shadow: 0 4px 12px rgba(230, 57, 70, 0.3);
-        }
+        .modal-tab-btn { padding: 10px 20px; border: none; background: none; color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent; }
+        .modal-tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+        .tab-panel { display: none; padding-top: 20px; }
+        .tab-panel.active { display: block; }
 
-        /* الأنيميشن */
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* باقي التنسيقات الضرورية للهيكل */
-        .modal-body { padding: 20px; }
-        .modal-anime-title { font-size: 24px; font-weight: 900; margin-bottom: 10px; }
-        .story-text { color: var(--text-secondary); line-height: 1.8; font-size: 14px; }
-        
-        /* إخفاء شاشة التحميل عند الجاهزية */
-        #loading-screen.hidden { opacity: 0; pointer-events: none; }
-        #loading-screen {
-            position: fixed; inset: 0; z-index: 9999; background: var(--bg-primary);
-            display: flex; align-items: center; justify-content: center; transition: 0.6s;
-        }
+        footer { border-top: 1px solid var(--border); padding: 40px 16px; text-align: center; color: var(--text-muted); }
     </style>
 </head>
 <body>
 
-<div id="loading-screen">
-    <h2 style="color: var(--accent)">جاري تحميل عالمك...</h2>
+<div id="apology-notice">
+    <div class="notice-inner">
+        <div class="notice-content">
+            <div class="notice-title">تنويه واعتذار:</div>
+            <div class="notice-text">نعتذر عن أي إعلانات غير لائقة خارجة عن إرادتنا، نحن نعمل على تصفيتها.</div>
+        </div>
+        <button class="notice-close" onclick="closeApologyNotice()">✕</button>
+    </div>
 </div>
 
-<nav style="padding: 20px; text-align: center; border-bottom: 1px solid var(--border)">
-    <h1 class="modal-anime-title"><span style="color: var(--accent)">OTAKU</span> ZONE</h1>
+<div id="loading-screen">
+    <h1 style="font-weight:900; letter-spacing:2px;">OTAKU <span style="color:var(--accent)">ZONE</span></h1>
+    <div class="loading-bar-track"><div class="loading-bar-fill"></div></div>
+</div>
+
+<nav id="navbar">
+    <div class="nav-inner">
+        <div class="nav-logo">
+            <div class="nav-logo-icon">OZ</div>
+            <h2 style="font-size: 18px; margin-right:10px;">OTAKU ZONE</h2>
+        </div>
+        <div class="nav-search">
+            <input type="text" id="desktop-search" placeholder="ابحث عن أنمي..." oninput="filterAnime(this.value)">
+        </div>
+        <div class="nav-actions">
+            <button class="theme-toggle-btn" onclick="toggleTheme()">🌙</button>
+        </div>
+    </div>
 </nav>
 
-<section id="anime-section" style="padding: 40px 20px;">
-    <div id="anime-grid-container" class="episodes-grid">
-        </div>
+<section id="hero">
+    <div class="hero-content">
+        <h1 class="hero-title">عالم <span style="color:var(--accent)">الأنمي</span> بين يديك</h1>
+        <button class="btn-primary" onclick="document.getElementById('anime-section').scrollIntoView()">ابدأ المشاهدة</button>
+    </div>
+</section>
+
+<section id="anime-section">
+    <div class="anime-grid" id="anime-grid-container"></div>
 </section>
 
 <div id="anime-modal" onclick="if(event.target===this)closeModal()">
     <div class="modal-card">
         <button class="modal-close" onclick="closeModal()">✕</button>
-
+        
         <div class="modal-player" id="modal-player">
             <div class="modal-player-wrap">
-                <iframe id="player-iframe" src="" allowfullscreen allow="autoplay; fullscreen"></iframe>
+                <iframe id="player-iframe" src="" allowfullscreen></iframe>
             </div>
         </div>
 
         <div class="modal-body">
-            <h1 class="modal-anime-title" id="modal-title"></h1>
-            <p class="story-text" id="modal-story" style="margin-bottom: 20px;"></p>
-            
-            <hr style="border: 0; border-top: 1px solid var(--border); margin: 20px 0;">
-            
-            <h3 style="margin-bottom: 15px;">اختر الحلقة:</h3>
-            <div id="episodes-display" class="episodes-grid">
+            <div class="modal-layout">
+                <div style="flex: 0 0 240px;">
+                    <img id="modal-poster" src="" style="width:100%; border-radius:15px; border:1px solid var(--border);">
+                    <div id="season-pills-wrap">
+                        <p style="margin-top:15px; font-size:13px; color:var(--text-muted);">اختر الموسم:</p>
+                        <div class="season-pills" id="season-pills"></div>
+                    </div>
                 </div>
+                <div style="flex:1;">
+                    <h1 id="modal-title" style="margin-bottom:10px;"></h1>
+                    <div class="modal-tabs">
+                        <button class="modal-tab-btn active" onclick="switchTab(event,'tab-story')">الحلقات والقصة</button>
+                        <button class="modal-tab-btn" onclick="switchTab(event,'tab-info')">معلومات</button>
+                    </div>
+                    <div id="tab-story" class="tab-panel active">
+                        <div id="episodes-display"></div>
+                    </div>
+                    <div id="tab-info" class="tab-panel">
+                        <p id="modal-desc" style="line-height:1.8; color:var(--text-secondary);"></p>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
+<footer>
+    <p>© 2026 Otaku Zone - جميع الحقوق محفوظة</p>
+</footer>
+
 <script>
-// إعدادات Supabase
 const SB_URL = "https://bdzbajkpaqkujbkvrjfu.supabase.co";
 const SB_KEY = "sb_publishable_gwkBiDaTv8jYG4IHFITCLA__zBnhS8r";
 const _supabase = supabase.createClient(SB_URL, SB_KEY);
 
 let allAnimeData = {};
+let currentSeasonsMap = {};
+let currentModalEpisodes = [];
 
-// دالة تشغيل الحلقة (السر في هذه الدالة)
+// ===========================
+// المشكلة الأساسية: معالجة الحلقات والتشغيل المباشر
+// ===========================
+
+function selectSeasonPill(btn, seasonNum) {
+    document.querySelectorAll('#season-pills .season-pill').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    updateEpisodes(seasonNum);
+}
+
+function updateEpisodes(seasonNum) {
+    const eps = (currentSeasonsMap[seasonNum] || []).sort((a, b) => a.episode_number - b.episode_number);
+    const display = document.getElementById('episodes-display');
+    
+    if (!eps.length) {
+        display.innerHTML = '<p>لا توجد حلقات.</p>';
+        return;
+    }
+
+    display.innerHTML = `<div class="episodes-grid">${eps.map(e => `
+        <button class="episode-btn" id="ep-btn-${e.episode_number}" 
+                onclick="playEpisode('${e.video_url}', ${e.episode_number})">
+            الحلقة ${e.episode_number}
+        </button>
+    `).join('')}</div>`;
+}
+
 function playEpisode(url, epNum) {
-    // 1. تحديث شكل الأزرار (إضافة active للحلقة المختارة)
-    document.querySelectorAll('.episode-btn').forEach(btn => btn.classList.remove('active'));
-    const activeBtn = document.querySelector(`[data-ep="${epNum}"]`);
-    if (activeBtn) activeBtn.classList.add('active');
+    // 1. تفعيل الزر بصرياً
+    document.querySelectorAll('.episode-btn').forEach(b => b.classList.remove('active'));
+    const btn = document.getElementById(`ep-btn-${epNum}`);
+    if (btn) btn.classList.add('active');
 
-    // 2. إظهار قسم المشغل إذا كان مخفياً
-    const playerSection = document.getElementById('modal-player');
-    playerSection.classList.add('active');
-
-    // 3. تغيير رابط الـ iframe مباشرة دون إغلاق المودال
+    // 2. تحديث المشغل وتشغيله
+    const player = document.getElementById('modal-player');
     const iframe = document.getElementById('player-iframe');
-    iframe.src = url;
+    
+    player.classList.add('active'); // إظهار حاوية الفيديو
+    iframe.src = url; // وضع الرابط المباشر
 
-    // 4. تمرير الصفحة للأعلى لمشاهدة الفيديو فوراً
+    // 3. التمرير للأعلى لرؤية الفيديو بوضوح
     document.getElementById('anime-modal').scrollTo({ top: 0, behavior: 'smooth' });
 }
+
+// ===========================
+// وظائف المودال والبيانات
+// ===========================
 
 async function openModal(malId) {
     const data = allAnimeData[malId];
@@ -168,63 +293,93 @@ async function openModal(malId) {
     document.body.style.overflow = 'hidden';
 
     document.getElementById('modal-title').textContent = data.anime.title;
-    document.getElementById('modal-story').textContent = data.anime.synopsis || "لا يوجد وصف حالياً.";
+    document.getElementById('modal-poster').src = data.anime.images.jpg.large_image_url;
+    document.getElementById('modal-desc').textContent = data.anime.synopsis;
     
-    // تصفير المشغل عند فتح أنمي جديد
+    // إعادة تعيين المشغل
     document.getElementById('modal-player').classList.remove('active');
-    document.getElementById('player-iframe').src = "";
+    document.getElementById('player-iframe').src = '';
 
-    // عرض الحلقات
-    const episodesDiv = document.getElementById('episodes-display');
-    const sortedEps = data.episodes.sort((a, b) => a.episode_number - b.episode_number);
+    // تنظيم الفصول/المواسم
+    currentSeasonsMap = {};
+    data.episodes.forEach(e => {
+        if (!currentSeasonsMap[e.season_number]) currentSeasonsMap[e.season_number] = [];
+        currentSeasonsMap[e.season_number].push(e);
+    });
 
-    episodesDiv.innerHTML = sortedEps.map(e => `
-        <button class="episode-btn" data-ep="${e.episode_number}" onclick="playEpisode('${e.video_url}', ${e.episode_number})">
-            الحلقة ${e.episode_number}
-        </button>
+    const seasons = Object.keys(currentSeasonsMap).sort((a,b)=>a-b);
+    const pillsContainer = document.getElementById('season-pills');
+    
+    pillsContainer.innerHTML = seasons.map((s, i) => `
+        <button class="season-pill ${i===0?'active':''}" onclick="selectSeasonPill(this, ${s})">موسم ${s}</button>
     `).join('');
+
+    updateEpisodes(seasons[0]);
 }
 
 function closeModal() {
     document.getElementById('anime-modal').classList.remove('open');
-    document.getElementById('player-iframe').src = "";
     document.body.style.overflow = '';
+    document.getElementById('player-iframe').src = '';
 }
 
-// جلب البيانات عند البداية
+function switchTab(e, tabId) {
+    document.querySelectorAll('.modal-tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    e.target.classList.add('active');
+    document.getElementById(tabId).classList.add('active');
+}
+
+// ===========================
+// تهيئة البيانات (Supabase + Jikan)
+// ===========================
+
 async function init() {
-    try {
-        const { data: episodes } = await _supabase.from('episodes').select('*');
-        const groups = {};
-        episodes.forEach(e => {
-            if (!groups[e.mal_id]) groups[e.mal_id] = [];
-            groups[e.mal_id].push(e);
-        });
+    const { data: episodes } = await _supabase.from('episodes').select('*');
+    const groups = {};
+    episodes.forEach(e => {
+        if(!groups[e.mal_id]) groups[e.mal_id] = [];
+        groups[e.mal_id].push(e);
+    });
 
-        const container = document.getElementById('anime-grid-container');
-        container.innerHTML = "";
+    const container = document.getElementById('anime-grid-container');
+    const ids = Object.keys(groups);
 
-        for (const malId in groups) {
-            const res = await fetch(`https://api.jikan.moe/v4/anime/${malId}`);
-            const { data: anime } = await res.json();
-            allAnimeData[malId] = { anime, episodes: groups[malId] };
-
-            // إضافة بطاقة الأنمي للشبكة
-            container.innerHTML += `
-                <div class="episode-btn" style="text-align:center; height: auto;" onclick="openModal(${malId})">
-                    <img src="${anime.images.jpg.image_url}" style="width:100%; border-radius:8px; margin-bottom:10px;">
-                    <div style="font-size:12px;">${anime.title}</div>
+    for (const id of ids) {
+        const res = await fetch(`https://api.jikan.moe/v4/anime/${id}`);
+        const { data: anime } = await res.json();
+        allAnimeData[id] = { anime, episodes: groups[id] };
+        
+        container.innerHTML += `
+            <div class="anime-card" onclick="openModal(${id})">
+                <div class="anime-card-inner">
+                    <div class="anime-card-img"><img src="${anime.images.jpg.image_url}"></div>
+                    <div class="anime-card-info">
+                        <p style="font-size:12px; font-weight:bold; overflow:hidden; white-space:nowrap; text-overflow:ellipsis;">${anime.title}</p>
+                    </div>
                 </div>
-            `;
-        }
-        document.getElementById('loading-screen').classList.add('hidden');
-    } catch (e) {
-        console.error(e);
+            </div>
+        `;
+        await new Promise(r => setTimeout(r, 400)); // لعدم حظر الـ API
     }
+    document.getElementById('loading-screen').classList.add('hidden');
 }
+
+function toggleTheme() {
+    const theme = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', theme);
+}
+
+function closeApologyNotice() {
+    document.getElementById('apology-notice').classList.add('slide-out');
+}
+
+window.addEventListener('scroll', () => {
+    if(window.scrollY > 50) document.getElementById('navbar').classList.add('scrolled');
+    else document.getElementById('navbar').classList.remove('scrolled');
+});
 
 init();
 </script>
-
 </body>
 </html>
