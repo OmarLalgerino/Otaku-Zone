@@ -3,61 +3,81 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Otaku Zone - تصحيح روابط الحلقات</title>
+    <title>Otaku Zone - قائمة الحلقات الاحترافية</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
-        :root { --bg: #050508; --card: #12121a; --accent: #e63946; --text: #f0f0f5; --border: #1e1e2e; }
+        :root { 
+            --bg: #050508; 
+            --card: #12121a; 
+            --accent: #e63946; 
+            --text: #f0f0f5; 
+            --text-dim: #8888a0;
+            --border: #1e1e2e; 
+        }
         body { background: var(--bg); color: var(--text); font-family: 'Noto Kufi Arabic', sans-serif; margin: 0; direction: rtl; }
-        
-        /* Grid */
-        .container { max-width: 1200px; margin: 80px auto; padding: 20px; }
-        .anime-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 20px; }
-        .card { background: var(--card); border-radius: 12px; cursor: pointer; border: 1px solid var(--border); overflow: hidden; }
-        .card img { width: 100%; aspect-ratio: 2/3; object-fit: cover; }
-        .card-title { padding: 10px; font-size: 13px; text-align: center; }
 
-        /* Modal */
-        #modal { position: fixed; inset: 0; background: rgba(0,0,0,0.95); display: none; z-index: 1000; overflow-y: auto; padding: 20px; }
+        /* Modal & Layout */
+        #modal { position: fixed; inset: 0; background: rgba(0,0,0,0.98); display: none; z-index: 1000; overflow-y: auto; }
         #modal.open { display: block; }
-        .modal-content { max-width: 900px; margin: 0 auto; background: var(--bg); border-radius: 20px; border: 1px solid var(--border); overflow: hidden; }
+        .modal-content { max-width: 800px; margin: 20px auto; background: #fff; color: #333; border-radius: 15px; overflow: hidden; }
         
-        /* Player */
-        .video-box { width: 100%; aspect-ratio: 16/9; background: #000; display: none; }
-        .video-box.active { display: block; }
+        /* Video Player Section */
+        .player-wrapper { width: 100%; aspect-ratio: 16/9; background: #000; position: sticky; top: 0; z-index: 10; }
         iframe { width: 100%; height: 100%; border: none; }
 
-        .details { padding: 20px; }
-        .season-nav { display: flex; gap: 10px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 10px; }
-        .pill { padding: 8px 20px; background: var(--card); border: 1px solid var(--border); border-radius: 30px; cursor: pointer; white-space: nowrap; }
-        .pill.active { background: var(--accent); border-color: var(--accent); }
+        /* Header in List */
+        .list-header { padding: 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; background: #f9f9f9; }
+        .list-title { font-weight: 800; font-size: 18px; }
+        .search-box { background: #fff; border: 1px solid #ddd; padding: 5px 15px; border-radius: 8px; width: 60%; display: flex; align-items: center; }
+        .search-box input { border: none; outline: none; width: 100%; font-family: inherit; font-size: 14px; }
 
-        .ep-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); gap: 10px; }
-        .ep-btn { padding: 12px; background: var(--card); border: 1px solid var(--border); border-radius: 8px; color: #fff; cursor: pointer; transition: 0.2s; }
-        .ep-btn:hover { border-color: var(--accent); }
-        .ep-btn.active { background: var(--accent); }
-        
-        .close-btn { position: absolute; top: 30px; left: 30px; background: var(--accent); color: #fff; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; z-index: 1100; }
+        /* Episodes List Style (The New Idea) */
+        .episodes-list { padding: 0; margin: 0; list-style: none; }
+        .episode-item { 
+            display: flex; 
+            align-items: center; 
+            padding: 12px 15px; 
+            border-bottom: 1px solid #f0f0f0; 
+            cursor: pointer; 
+            transition: 0.2s;
+            position: relative;
+        }
+        .episode-item:hover { background: #f8f8f8; }
+        .episode-item.active { background: #fff5f5; border-right: 4px solid var(--accent); }
+
+        .play-icon { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-left: 15px; font-size: 12px; }
+        .play-icon.played { background: #000; color: #fff; }
+        .play-icon.current { background: #ffc107; color: #000; }
+
+        .ep-info { flex-grow: 1; }
+        .ep-info h4 { margin: 0; font-size: 15px; font-weight: 700; }
+        .ep-info p { margin: 3px 0 0; font-size: 12px; color: #777; }
+
+        .ep-thumb { width: 100px; height: 60px; border-radius: 6px; object-fit: cover; margin-right: 15px; }
+
+        .close-btn { position: fixed; top: 20px; left: 20px; z-index: 1100; background: var(--accent); border: none; color: white; padding: 10px 15px; border-radius: 50%; cursor: pointer; }
     </style>
 </head>
 <body>
 
-<button class="close-btn" id="closeBtn" style="display:none;" onclick="closeModal()">✕</button>
-
-<div class="container">
-    <div class="anime-grid" id="mainGrid"></div>
-</div>
+<button class="close-btn" onclick="closeModal()">✕</button>
 
 <div id="modal">
     <div class="modal-content">
-        <div class="video-box" id="videoBox">
-            <iframe id="player" src="" allowfullscreen></iframe>
+        <div class="player-wrapper">
+            <iframe id="main-player" src="" allowfullscreen></iframe>
         </div>
-        <div class="details">
-            <h2 id="mTitle"></h2>
-            <div class="season-nav" id="mSeasons"></div>
-            <div class="ep-grid" id="mEpisodes"></div>
+
+        <div class="list-header">
+            <div class="list-title">قائمة الحلقات</div>
+            <div class="search-box">
+                <input type="text" placeholder="البحث عن حلقة..." oninput="filterEpisodes(this.value)">
+            </div>
         </div>
+
+        <div class="episodes-list" id="episodes-list">
+            </div>
     </div>
 </div>
 
@@ -66,110 +86,62 @@ const SB_URL = "https://bdzbajkpaqkujbkvrjfu.supabase.co";
 const SB_KEY = "sb_publishable_gwkBiDaTv8jYG4IHFITCLA__zBnhS8r";
 const _supabase = supabase.createClient(SB_URL, SB_KEY);
 
-let store = {}; // تخزين كل البيانات هنا
-let currentSeasons = {};
+let allEpisodes = []; // لتخزين الحلقات الحالية للفلترة
 
-async function start() {
-    // 1. جلب كل الحلقات من Supabase
-    const { data: allEpisodes, error } = await _supabase.from('episodes').select('*');
-    if (error) return console.error("Error fetching episodes:", error);
+// دالة تجريبية لفتح المودال (يجب ربطها ببطاقة الأنمي لديك)
+async function openModal(malId) {
+    const { data, error } = await _supabase
+        .from('episodes')
+        .select('*')
+        .eq('mal_id', malId)
+        .order('episode_number', { ascending: true });
 
-    // 2. تجميع الحلقات حسب الأنمي
-    const grouped = allEpisodes.reduce((acc, ep) => {
-        if (!acc[ep.mal_id]) acc[ep.mal_id] = [];
-        acc[ep.mal_id].push(ep);
-        return acc;
-    }, {});
-
-    // 3. جلب معلومات الأنمي من Jikan وتعبئة الشبكة
-    for (const id in grouped) {
-        try {
-            const res = await fetch(`https://api.jikan.moe/v4/anime/${id}`);
-            const { data: info } = await res.json();
-            
-            store[id] = { info, episodes: grouped[id] };
-
-            document.getElementById('mainGrid').innerHTML += `
-                <div class="card" onclick="openModal('${id}')">
-                    <img src="${info.images.jpg.image_url}">
-                    <div class="card-title">${info.title}</div>
-                </div>
-            `;
-            await new Promise(r => setTimeout(r, 400)); // احترام حدود الـ API
-        } catch (e) { console.error(e); }
-    }
-}
-
-function openModal(id) {
-    const data = store[id];
-    document.getElementById('mTitle').textContent = data.info.title;
-    document.getElementById('player').src = "";
-    document.getElementById('videoBox').classList.remove('active');
-    
-    // تقسيم الحلقات لمواسم
-    currentSeasons = data.episodes.reduce((acc, ep) => {
-        if (!acc[ep.season_number]) acc[ep.season_number] = [];
-        acc[ep.season_number].push(ep);
-        return acc;
-    }, {});
-
-    const sNums = Object.keys(currentSeasons).sort((a,b) => a-b);
-    const sContainer = document.getElementById('mSeasons');
-    sContainer.innerHTML = sNums.map((n, i) => `
-        <div class="pill ${i===0?'active':''}" onclick="renderEpisodes(this, ${n})">الموسم ${n}</div>
-    `).join('');
-
-    renderEpisodes(null, sNums[0]);
-    
+    if (error) return;
+    allEpisodes = data;
+    renderList(allEpisodes);
     document.getElementById('modal').classList.add('open');
-    document.getElementById('closeBtn').style.display = "block";
-    document.body.style.overflow = "hidden";
 }
 
-// الدالة المسؤولة عن جلب روابط الحلقات الصحيحة
-function renderEpisodes(btn, sNum) {
-    if (btn) {
-        document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
-        btn.classList.add('active');
-    }
-
-    // ترتيب الحلقات تصاعدياً
-    const eps = currentSeasons[sNum].sort((a, b) => a.episode_number - b.episode_number);
-    const container = document.getElementById('mEpisodes');
-
-    // هنا تكمن القوة: نمرر الرابط المباشر `video_url` القادم من Supabase لكل زر
-    container.innerHTML = eps.map(e => `
-        <button class="ep-btn" id="btn-ep-${e.episode_number}" 
-                onclick="watch('${e.video_url}', ${e.episode_number})">
-            ${e.episode_number}
-        </button>
+function renderList(list) {
+    const container = document.getElementById('episodes-list');
+    container.innerHTML = list.map(ep => `
+        <div class="episode-item" id="item-${ep.episode_number}" onclick="playNow('${ep.video_url}', ${ep.episode_number})">
+            <div class="play-icon ${ep.episode_number > 5 ? 'played' : 'current'}">
+                ${ep.episode_number > 5 ? '▶' : '●'}
+            </div>
+            <div class="ep-info">
+                <h4>الحلقة ${ep.episode_number}</h4>
+                <p>Season: ${ep.season_number}-hen</p>
+            </div>
+            <img class="ep-thumb" src="${ep.thumbnail || 'https://via.placeholder.com/100x60?text=OZ'}" alt="thumb">
+        </div>
     `).join('');
 }
 
-function watch(link, num) {
-    const box = document.getElementById('videoBox');
-    const player = document.getElementById('player');
+function playNow(url, num) {
+    // 1. تحديث المشغل
+    document.getElementById('main-player').src = url;
 
-    // 1. تفعيل المشغل ووضع الرابط
-    box.classList.add('active');
-    player.src = link;
+    // 2. تحديث الشكل البصري للقائمة
+    document.querySelectorAll('.episode-item').forEach(el => el.classList.remove('active'));
+    document.getElementById(`item-${num}`).classList.add('active');
 
-    // 2. تلوين الزر المختار
-    document.querySelectorAll('.ep-btn').forEach(b => b.classList.remove('active'));
-    document.getElementById(`btn-ep-${num}`).classList.add('active');
+    // 3. التمرير للأعلى للمشغل
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
 
-    // 3. رفع الشاشة للمشغل
-    document.getElementById('modal').scrollTo({ top: 0, behavior: 'smooth' });
+function filterEpisodes(term) {
+    const filtered = allEpisodes.filter(ep => ep.episode_number.toString().includes(term));
+    renderList(filtered);
 }
 
 function closeModal() {
     document.getElementById('modal').classList.remove('open');
-    document.getElementById('closeBtn').style.display = "none";
-    document.getElementById('player').src = "";
-    document.body.style.overflow = "auto";
+    document.getElementById('main-player').src = "";
 }
 
-start();
+// تشغيل تجريبي (للعرض فقط)
+// openModal(51009); 
 </script>
 </body>
 </html>
