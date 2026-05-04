@@ -3,81 +3,206 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Otaku Zone - قائمة الحلقات الاحترافية</title>
+    <title>Otaku Zone - عالم الأنمي العربي</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%230a0a10'/%3E%3Ctext x='50' y='40' font-family='Arial Black' font-size='28' font-weight='900' fill='%23e63946' text-anchor='middle' dominant-baseline='middle'%3EOZ%3C/text%3E%3Ctext x='50' y='72' font-family='Arial' font-size='12' fill='%23888' text-anchor='middle'%3Eアニメ%3C/text%3E%3C/svg%3E">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
-        :root { 
-            --bg: #050508; 
-            --card: #12121a; 
-            --accent: #e63946; 
-            --text: #f0f0f5; 
-            --text-dim: #8888a0;
-            --border: #1e1e2e; 
+        /* ===== THEME VARIABLES ===== */
+        :root {
+            --bg-primary: #050508;
+            --bg-secondary: #0c0c12;
+            --bg-card: #12121a;
+            --bg-card-hover: #1a1a25;
+            --bg-modal: #0a0a10;
+            --accent: #e63946;
+            --accent-glow: #ff1a2e;
+            --accent-dark: #b91c28;
+            --gold: #ffd700;
+            --gold-dim: #c4a000;
+            --text-primary: #f0f0f5;
+            --text-secondary: #8888a0;
+            --text-muted: #55556a;
+            --border: #1e1e2e;
+            --border-accent: #2a2a3e;
+            --telegram: #0088cc;
         }
-        body { background: var(--bg); color: var(--text); font-family: 'Noto Kufi Arabic', sans-serif; margin: 0; direction: rtl; }
 
-        /* Modal & Layout */
-        #modal { position: fixed; inset: 0; background: rgba(0,0,0,0.98); display: none; z-index: 1000; overflow-y: auto; }
-        #modal.open { display: block; }
-        .modal-content { max-width: 800px; margin: 20px auto; background: #fff; color: #333; border-radius: 15px; overflow: hidden; }
-        
-        /* Video Player Section */
-        .player-wrapper { width: 100%; aspect-ratio: 16/9; background: #000; position: sticky; top: 0; z-index: 10; }
-        iframe { width: 100%; height: 100%; border: none; }
-
-        /* Header in List */
-        .list-header { padding: 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; background: #f9f9f9; }
-        .list-title { font-weight: 800; font-size: 18px; }
-        .search-box { background: #fff; border: 1px solid #ddd; padding: 5px 15px; border-radius: 8px; width: 60%; display: flex; align-items: center; }
-        .search-box input { border: none; outline: none; width: 100%; font-family: inherit; font-size: 14px; }
-
-        /* Episodes List Style (The New Idea) */
-        .episodes-list { padding: 0; margin: 0; list-style: none; }
-        .episode-item { 
-            display: flex; 
-            align-items: center; 
-            padding: 12px 15px; 
-            border-bottom: 1px solid #f0f0f0; 
-            cursor: pointer; 
-            transition: 0.2s;
-            position: relative;
+        [data-theme="light"] {
+            --bg-primary: #f5f5f7;
+            --bg-secondary: #ebebef;
+            --bg-card: #ffffff;
+            --bg-card-hover: #f0f0f5;
+            --bg-modal: #ffffff;
+            --accent: #e63946;
+            --accent-glow: #ff1a2e;
+            --accent-dark: #b91c28;
+            --gold: #c4900a;
+            --gold-dim: #a07000;
+            --text-primary: #111118;
+            --text-secondary: #55556a;
+            --text-muted: #9090a8;
+            --border: #dcdce8;
+            --border-accent: #c8c8da;
+            --telegram: #006fa8;
         }
-        .episode-item:hover { background: #f8f8f8; }
-        .episode-item.active { background: #fff5f5; border-right: 4px solid var(--accent); }
 
-        .play-icon { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-left: 15px; font-size: 12px; }
-        .play-icon.played { background: #000; color: #fff; }
-        .play-icon.current { background: #ffc107; color: #000; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: 'Noto Kufi Arabic', sans-serif;
+            direction: rtl;
+            overflow-x: hidden;
+            min-height: 100vh;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
 
-        .ep-info { flex-grow: 1; }
-        .ep-info h4 { margin: 0; font-size: 15px; font-weight: 700; }
-        .ep-info p { margin: 3px 0 0; font-size: 12px; color: #777; }
+        /* ===== ANIMATIONS ===== */
+        @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideDown { from { transform: translateY(-110%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
-        .ep-thumb { width: 100px; height: 60px; border-radius: 6px; object-fit: cover; margin-right: 15px; }
+        /* ===== NOTICE BANNER ===== */
+        #apology-notice {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 9998;
+            transform: translateY(-110%); opacity: 0;
+        }
+        #apology-notice.slide-in { animation: slideDown 0.65s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+        .notice-inner {
+            background: linear-gradient(135deg, #1a0d0e 0%, #120a0b 50%, #1a0d0e 100%);
+            border-bottom: 1px solid rgba(230, 57, 70, 0.35); padding: 12px 16px;
+            display: flex; align-items: flex-start; gap: 12px; box-shadow: 0 4px 24px rgba(0, 0, 0, 0.6);
+        }
+        [data-theme="light"] .notice-inner { background: linear-gradient(135deg, #fff0f1 0%, #fff5f5 50%, #fff0f1 100%); }
+        .notice-title { font-size: 13px; font-weight: 800; color: var(--accent); margin-bottom: 4px; }
+        .notice-text { font-size: 12px; color: var(--text-secondary); line-height: 1.75; }
+        .notice-close { background: rgba(230, 57, 70, 0.1); border: 1px solid rgba(230, 57, 70, 0.2); color: var(--text-muted); cursor: pointer; padding: 4px 8px; border-radius: 8px; }
 
-        .close-btn { position: fixed; top: 20px; left: 20px; z-index: 1100; background: var(--accent); border: none; color: white; padding: 10px 15px; border-radius: 50%; cursor: pointer; }
+        /* ===== NAVBAR ===== */
+        #navbar { position: fixed; top: 0; left: 0; right: 0; z-index: 100; transition: all 0.4s ease; }
+        #navbar.scrolled { background: rgba(5,5,8,0.92); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border); }
+        [data-theme="light"] #navbar.scrolled { background: rgba(245,245,247,0.92); }
+        .nav-inner { max-width: 1280px; margin: 0 auto; padding: 0 16px; display: flex; align-items: center; justify-content: space-between; height: 72px; }
+        .nav-logo-icon { width: 44px; height: 44px; background: var(--accent); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: 900; color: white; }
+        .nav-search { flex: 1; max-width: 420px; margin: 0 16px; position: relative; }
+        .nav-search input { width: 100%; background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; padding: 10px 16px; color: var(--text-primary); outline: none; }
+        .theme-toggle-btn { width: 38px; height: 38px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; cursor: pointer; }
+
+        /* ===== NEW EPISODE LIST STYLE (List View) ===== */
+        .episodes-list-container { margin-top: 20px; display: flex; flex-direction: column; gap: 10px; }
+        .episode-row {
+            display: flex; align-items: center; gap: 12px; background: var(--bg-card);
+            border: 1px solid var(--border); border-radius: 12px; padding: 8px;
+            cursor: pointer; transition: all 0.3s ease; position: relative; overflow: hidden;
+        }
+        .episode-row:hover { border-color: var(--accent); background: var(--bg-card-hover); transform: translateX(-5px); }
+        .episode-row.active { border-color: var(--accent); background: rgba(230, 57, 70, 0.08); }
+        .episode-row.active::after { content: ''; position: absolute; right: 0; top: 0; bottom: 0; width: 4px; background: var(--accent); }
+        .ep-thumbnail-wrap { position: relative; width: 110px; height: 65px; flex-shrink: 0; border-radius: 8px; overflow: hidden; background: #000; }
+        .ep-thumbnail-wrap img { width: 100%; height: 100%; object-fit: cover; opacity: 0.8; }
+        .ep-play-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; opacity: 0; transition: 0.3s; }
+        .episode-row:hover .ep-play-overlay { opacity: 1; }
+        .ep-details { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+        .ep-number-title { font-size: 14px; font-weight: 700; color: var(--text-primary); }
+        .ep-season-tag { font-size: 11px; color: var(--text-muted); background: var(--bg-secondary); padding: 2px 8px; border-radius: 4px; width: fit-content; }
+        .ep-status-icon { color: var(--text-muted); margin-left: 8px; }
+        .episode-row.active .ep-status-icon { color: var(--accent); }
+
+        /* ===== HERO & GRID (General Styles) ===== */
+        #hero { position: relative; min-height: 70vh; display: flex; align-items: center; padding-top: 80px; }
+        .hero-title { font-size: clamp(28px, 6vw, 60px); font-weight: 900; margin-bottom: 20px; }
+        .text-gradient { background: linear-gradient(135deg, #e63946, #ff6b6b); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .anime-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 16px; }
+        .anime-card { cursor: pointer; transition: transform 0.3s; }
+        .anime-card:hover { transform: translateY(-6px); }
+        .anime-card-inner { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+        .anime-card-img { position: relative; aspect-ratio: 3/4; }
+        .anime-card-img img { width: 100%; height: 100%; object-fit: cover; }
+
+        /* ===== MODAL ===== */
+        #anime-modal { position: fixed; inset: 0; z-index: 200; display: none; background: rgba(0,0,0,0.9); backdrop-filter: blur(4px); overflow-y: auto; padding: 20px 10px; }
+        #anime-modal.open { display: flex; justify-content: center; }
+        .modal-card { background: var(--bg-modal); width: 100%; max-width: 1000px; border-radius: 24px; overflow: hidden; position: relative; border: 1px solid var(--border); }
+        .modal-player.active { display: block; background: #000; width: 100%; aspect-ratio: 16/9; }
+        .modal-player iframe { width: 100%; height: 100%; border: none; }
+        .modal-body { padding: 24px; display: grid; grid-template-columns: 240px 1fr; gap: 24px; }
+        @media (max-width: 768px) { .modal-body { grid-template-columns: 1fr; } }
+        .modal-close { position: absolute; top: 15px; left: 15px; z-index: 10; background: rgba(0,0,0,0.5); color: white; border: none; width: 35px; height: 35px; border-radius: 50%; cursor: pointer; }
+
+        /* ===== LOADING SCREEN ===== */
+        #loading-screen { position: fixed; inset: 0; z-index: 9999; background: var(--bg-primary); display: flex; align-items: center; justify-content: center; transition: opacity 0.6s; }
+        #loading-screen.hidden { opacity: 0; pointer-events: none; }
     </style>
 </head>
 <body>
 
-<button class="close-btn" onclick="closeModal()">✕</button>
-
-<div id="modal">
-    <div class="modal-content">
-        <div class="player-wrapper">
-            <iframe id="main-player" src="" allowfullscreen></iframe>
+<div id="apology-notice">
+    <div class="notice-inner">
+        <div class="notice-content">
+            <div class="notice-title">🔔 تنويه واعتذار:</div>
+            <div class="notice-text">نعتذر عن أي إعلانات خارجية غير لائقة؛ نحن نعمل على حظرها لضمان بيئة آمنة.</div>
         </div>
+        <button class="notice-close" onclick="closeApologyNotice()">✕</button>
+    </div>
+</div>
 
-        <div class="list-header">
-            <div class="list-title">قائمة الحلقات</div>
-            <div class="search-box">
-                <input type="text" placeholder="البحث عن حلقة..." oninput="filterEpisodes(this.value)">
+<div id="loading-screen">
+    <h1 class="text-gradient" style="font-size: 40px; font-weight: 900;">OTAKU ZONE</h1>
+</div>
+
+<nav id="navbar">
+    <div class="nav-inner">
+        <div class="nav-logo" onclick="window.scrollTo({top:0,behavior:'smooth'})">
+            <div class="nav-logo-icon">OZ</div>
+        </div>
+        <div class="nav-search">
+            <input type="text" id="desktop-search" placeholder="ابحث عن أنمي..." oninput="filterAnime(this.value)">
+        </div>
+        <div class="nav-actions">
+            <button class="theme-toggle-btn" id="theme-toggle-btn" onclick="toggleTheme()">🌙</button>
+        </div>
+    </div>
+</nav>
+
+<section id="hero">
+    <div style="max-width: 1280px; margin: 0 auto; padding: 0 16px; width: 100%;">
+        <h1 class="hero-title">عالم <span class="text-gradient">الأنمي</span> بين يديك</h1>
+        <p style="color: var(--text-secondary); max-width: 500px; margin-bottom: 30px;">شاهد أحدث الحلقات المترجمة بجودة عالية وتجربة مستخدم فريدة.</p>
+        <button class="theme-toggle-btn" style="width: auto; padding: 12px 24px; background: var(--accent); color: white; border: none; font-weight: bold;" onclick="document.getElementById('anime-section').scrollIntoView({behavior:'smooth'})">ابدأ الاستكشاف</button>
+    </div>
+</section>
+
+<section id="anime-section" style="padding: 40px 16px;">
+    <div style="max-width: 1280px; margin: 0 auto;">
+        <h2 style="margin-bottom: 24px;">🎬 الأنميات المتاحة</h2>
+        <div id="anime-grid-container">
+            <p>جاري التحميل...</p>
+        </div>
+    </div>
+</section>
+
+<div id="anime-modal" onclick="if(event.target===this)closeModal()">
+    <div class="modal-card">
+        <button class="modal-close" onclick="closeModal()">✕</button>
+        <div class="modal-player" id="modal-player">
+            <iframe id="player-iframe" src="" allowfullscreen></iframe>
+        </div>
+        <div class="modal-body">
+            <div class="modal-sidebar">
+                <img id="modal-poster" src="" style="width: 100%; border-radius: 15px; margin-bottom: 15px;">
+                <div id="season-pills-wrap" style="margin-bottom: 15px;">
+                    <div id="season-pills" style="display: flex; gap: 5px; flex-wrap: wrap;"></div>
+                </div>
+            </div>
+            <div class="modal-main">
+                <h1 id="modal-title" class="text-gradient"></h1>
+                <p id="modal-sub" style="color: var(--text-muted); margin-bottom: 20px;"></p>
+                <h3>قائمة الحلقات:</h3>
+                <div id="episodes-display"></div>
             </div>
         </div>
-
-        <div class="episodes-list" id="episodes-list">
-            </div>
     </div>
 </div>
 
@@ -86,62 +211,138 @@ const SB_URL = "https://bdzbajkpaqkujbkvrjfu.supabase.co";
 const SB_KEY = "sb_publishable_gwkBiDaTv8jYG4IHFITCLA__zBnhS8r";
 const _supabase = supabase.createClient(SB_URL, SB_KEY);
 
-let allEpisodes = []; // لتخزين الحلقات الحالية للفلترة
+let allAnimeData = {};
+let currentModalAnime = null;
+let currentSeasonsMap = {};
+let searchQuery = '';
 
-// دالة تجريبية لفتح المودال (يجب ربطها ببطاقة الأنمي لديك)
+// --- THEME ---
+function toggleTheme() {
+    const current = document.documentElement.getAttribute('data-theme');
+    const target = current === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', target);
+    document.getElementById('theme-toggle-btn').textContent = target === 'dark' ? '☀️' : '🌙';
+}
+
+// --- APOLOGY NOTICE ---
+function closeApologyNotice() { document.getElementById('apology-notice').style.display = 'none'; }
+setTimeout(() => document.getElementById('apology-notice').classList.add('slide-in'), 2000);
+
+// --- SEARCH ---
+function filterAnime(q) {
+    searchQuery = q.toLowerCase();
+    renderGrid();
+}
+
+// --- RENDER GRID ---
+function renderGrid() {
+    const container = document.getElementById('anime-grid-container');
+    const entries = Object.values(allAnimeData).filter(d => d.anime);
+    let filtered = entries.filter(d => d.anime.title.toLowerCase().includes(searchQuery));
+
+    let html = '<div class="anime-grid">';
+    filtered.forEach(d => {
+        const a = d.anime;
+        html += `
+            <div class="anime-card" onclick="openModal(${a.mal_id})">
+                <div class="anime-card-inner">
+                    <div class="anime-card-img">
+                        <img src="${a.images.jpg.large_image_url}">
+                    </div>
+                    <div style="padding: 10px;">
+                        <div style="font-size: 13px; font-weight: bold;">${a.title}</div>
+                    </div>
+                </div>
+            </div>`;
+    });
+    container.innerHTML = html + '</div>';
+}
+
+// --- MODAL & EPISODES ---
 async function openModal(malId) {
-    const { data, error } = await _supabase
-        .from('episodes')
-        .select('*')
-        .eq('mal_id', malId)
-        .order('episode_number', { ascending: true });
+    const data = allAnimeData[malId];
+    currentModalAnime = data.anime;
+    const modal = document.getElementById('anime-modal');
+    modal.classList.add('open');
+    document.body.style.overflow = 'hidden';
 
-    if (error) return;
-    allEpisodes = data;
-    renderList(allEpisodes);
-    document.getElementById('modal').classList.add('open');
+    document.getElementById('modal-poster').src = currentModalAnime.images.jpg.large_image_url;
+    document.getElementById('modal-title').textContent = currentModalAnime.title;
+
+    currentSeasonsMap = {};
+    data.episodes.forEach(e => {
+        if (!currentSeasonsMap[e.season_number]) currentSeasonsMap[e.season_number] = [];
+        currentSeasonsMap[e.season_number].push(e);
+    });
+
+    const seasons = Object.keys(currentSeasonsMap).sort((a,b) => a-b);
+    document.getElementById('season-pills').innerHTML = seasons.map(s => 
+        `<button onclick="updateEpisodes(${s})" style="padding: 5px 15px; border-radius: 20px; border: 1px solid var(--border); background: var(--bg-card); color: white; cursor: pointer;">موسم ${s}</button>`
+    ).join('');
+
+    updateEpisodes(seasons[0]);
 }
 
-function renderList(list) {
-    const container = document.getElementById('episodes-list');
-    container.innerHTML = list.map(ep => `
-        <div class="episode-item" id="item-${ep.episode_number}" onclick="playNow('${ep.video_url}', ${ep.episode_number})">
-            <div class="play-icon ${ep.episode_number > 5 ? 'played' : 'current'}">
-                ${ep.episode_number > 5 ? '▶' : '●'}
-            </div>
-            <div class="ep-info">
-                <h4>الحلقة ${ep.episode_number}</h4>
-                <p>Season: ${ep.season_number}-hen</p>
-            </div>
-            <img class="ep-thumb" src="${ep.thumbnail || 'https://via.placeholder.com/100x60?text=OZ'}" alt="thumb">
-        </div>
-    `).join('');
+function updateEpisodes(seasonNum) {
+    const eps = (currentSeasonsMap[seasonNum] || []).sort((a, b) => a.episode_number - b.episode_number);
+    const display = document.getElementById('episodes-display');
+
+    display.innerHTML = `
+        <div class="episodes-list-container">
+            ${eps.map(e => `
+                <div class="episode-row" id="ep-row-${e.episode_number}" onclick="playEpisode('${e.video_url}', ${e.episode_number})">
+                    <div class="ep-thumbnail-wrap">
+                        <img src="${e.thumbnail || currentModalAnime.images.jpg.large_image_url}" alt="الحلقة ${e.episode_number}">
+                        <div class="ep-play-overlay">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                        </div>
+                    </div>
+                    <div class="ep-details">
+                        <span class="ep-number-title">الحلقة ${e.episode_number}</span>
+                        <span class="ep-season-tag">الموسم ${e.season_number}</span>
+                    </div>
+                    <div class="ep-status-icon">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+                    </div>
+                </div>
+            `).join('')}
+        </div>`;
 }
 
-function playNow(url, num) {
-    // 1. تحديث المشغل
-    document.getElementById('main-player').src = url;
-
-    // 2. تحديث الشكل البصري للقائمة
-    document.querySelectorAll('.episode-item').forEach(el => el.classList.remove('active'));
-    document.getElementById(`item-${num}`).classList.add('active');
-
-    // 3. التمرير للأعلى للمشغل
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-function filterEpisodes(term) {
-    const filtered = allEpisodes.filter(ep => ep.episode_number.toString().includes(term));
-    renderList(filtered);
+function playEpisode(url, epNum) {
+    document.querySelectorAll('.episode-row').forEach(r => r.classList.remove('active'));
+    document.getElementById(`ep-row-${epNum}`).classList.add('active');
+    
+    document.getElementById('modal-player').classList.add('active');
+    document.getElementById('player-iframe').src = url;
+    document.getElementById('anime-modal').scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function closeModal() {
-    document.getElementById('modal').classList.remove('open');
-    document.getElementById('main-player').src = "";
+    document.getElementById('anime-modal').classList.remove('open');
+    document.body.style.overflow = '';
+    document.getElementById('player-iframe').src = '';
 }
 
-// تشغيل تجريبي (للعرض فقط)
-// openModal(51009); 
+// --- INIT ---
+async function init() {
+    const { data: episodes } = await _supabase.from('episodes').select('*');
+    episodes.forEach(e => {
+        if (!allAnimeData[e.mal_id]) allAnimeData[e.mal_id] = { anime: null, episodes: [] };
+        allAnimeData[e.mal_id].episodes.push(e);
+    });
+
+    for (const id of Object.keys(allAnimeData)) {
+        const res = await fetch(`https://api.jikan.moe/v4/anime/${id}`);
+        const { data: anime } = await res.json();
+        allAnimeData[id].anime = anime;
+        renderGrid();
+        await new Promise(r => setTimeout(r, 400));
+    }
+    document.getElementById('loading-screen').classList.add('hidden');
+}
+
+init();
 </script>
 </body>
 </html>
