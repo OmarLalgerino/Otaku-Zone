@@ -105,6 +105,153 @@
             to { transform: rotate(360deg); }
         }
 
+        /* ===== NOTICE BANNER ANIMATION ===== */
+        @keyframes slideDown {
+            from {
+                transform: translateY(-110%);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        @keyframes slideUp {
+            from {
+                transform: translateY(0);
+                opacity: 1;
+                max-height: 200px;
+            }
+            to {
+                transform: translateY(-110%);
+                opacity: 0;
+                max-height: 0;
+            }
+        }
+
+        /* ===== APOLOGY NOTICE BANNER ===== */
+        #apology-notice {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 9998; /* Just below loading screen */
+            transform: translateY(-110%);
+            opacity: 0;
+            will-change: transform, opacity;
+        }
+        #apology-notice.slide-in {
+            animation: slideDown 0.65s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+        #apology-notice.slide-out {
+            animation: slideUp 0.4s ease-in forwards;
+        }
+
+        .notice-inner {
+            background: linear-gradient(135deg, #1a0d0e 0%, #120a0b 50%, #1a0d0e 100%);
+            border-bottom: 1px solid rgba(230, 57, 70, 0.35);
+            padding: 12px 16px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            box-shadow:
+                0 4px 24px rgba(0, 0, 0, 0.6),
+                0 1px 0 rgba(230, 57, 70, 0.2) inset;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Shimmer sweep effect on the banner */
+        .notice-inner::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, transparent 0%, rgba(230,57,70,0.04) 50%, transparent 100%);
+            background-size: 200% 100%;
+            animation: shimmer 3s infinite;
+            pointer-events: none;
+        }
+
+        /* Left accent bar */
+        .notice-inner::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: linear-gradient(to bottom, transparent, var(--accent), transparent);
+        }
+
+        [data-theme="light"] .notice-inner {
+            background: linear-gradient(135deg, #fff0f1 0%, #fff5f5 50%, #fff0f1 100%);
+            border-bottom-color: rgba(230, 57, 70, 0.25);
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12), 0 1px 0 rgba(230, 57, 70, 0.15) inset;
+        }
+
+        .notice-icon {
+            font-size: 20px;
+            flex-shrink: 0;
+            margin-top: 1px;
+            filter: drop-shadow(0 0 6px rgba(230,57,70,0.5));
+        }
+
+        .notice-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .notice-title {
+            font-size: 13px;
+            font-weight: 800;
+            color: var(--accent);
+            margin-bottom: 4px;
+            letter-spacing: 0.3px;
+            text-shadow: 0 0 20px rgba(230,57,70,0.3);
+        }
+
+        .notice-text {
+            font-size: 12px;
+            color: var(--text-secondary);
+            line-height: 1.75;
+        }
+
+        [data-theme="light"] .notice-text {
+            color: #55556a;
+        }
+
+        .notice-close {
+            flex-shrink: 0;
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            background: rgba(230, 57, 70, 0.1);
+            border: 1px solid rgba(230, 57, 70, 0.2);
+            color: var(--text-muted);
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.25s ease;
+            font-family: inherit;
+            line-height: 1;
+            margin-top: 1px;
+        }
+        .notice-close:hover {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: white;
+            transform: scale(1.1);
+        }
+
+        @media (max-width: 480px) {
+            .notice-inner { padding: 10px 12px; gap: 10px; }
+            .notice-title { font-size: 12px; }
+            .notice-text { font-size: 11px; }
+            .notice-icon { font-size: 17px; }
+        }
+
         .shimmer-bg {
             background: linear-gradient(90deg, transparent 0%, rgba(230,57,70,0.06) 50%, transparent 100%);
             background-size: 200% 100%;
@@ -880,6 +1027,18 @@
 </head>
 <body>
 
+<!-- ===== APOLOGY NOTICE BANNER ===== -->
+<div id="apology-notice">
+    <div class="notice-inner">
+        <div class="notice-icon">🔔</div>
+        <div class="notice-content">
+            <div class="notice-title">تنويه واعتذار:</div>
+            <div class="notice-text">نعتذر بشدة لمتابعينا الكرام عن أي إعلانات غير لائقة قد تظهر بشكل تلقائي. هذه الإعلانات مصدرها شبكات خارجية وليست باختيارنا. نحن نعمل الآن على حظر هذه الفئات والمصادر لضمان بيئة مشاهدة آمنة ومناسبة للجميع. شكرًا لتفهمكم.</div>
+        </div>
+        <button class="notice-close" onclick="closeApologyNotice()" title="إغلاق">✕</button>
+    </div>
+</div>
+
 <!-- ===== LOADING SCREEN ===== -->
 <div id="loading-screen">
     <div class="logo-wrap">
@@ -1114,6 +1273,32 @@ let currentSeasonKeys = [];
 let activeEpisodeNum = null;
 let searchQuery = '';
 let studioFilter = ''; // NEW: active studio filter
+
+// ===========================
+// ===== APOLOGY NOTICE =====
+// ===========================
+
+function closeApologyNotice() {
+    const notice = document.getElementById('apology-notice');
+    notice.classList.remove('slide-in');
+    notice.classList.add('slide-out');
+    // After animation ends, remove from flow entirely
+    notice.addEventListener('animationend', () => {
+        notice.style.display = 'none';
+    }, { once: true });
+}
+
+// Trigger the slide-in after loading screen hides (~800ms + a small buffer)
+function showApologyNotice() {
+    const notice = document.getElementById('apology-notice');
+    // Small delay so the notice appears after the loading screen fades
+    setTimeout(() => {
+        notice.classList.add('slide-in');
+    }, 1000);
+}
+
+// Call on page load
+showApologyNotice();
 
 // ===========================
 // ===== FEATURE 3: AUTO DAY/NIGHT MODE =====
